@@ -1,12 +1,11 @@
 Package: preferenceloader.rootless.top
 Description: load preferences in style
 Version: 2.2.7
-Maintainer: zp,Dustin Howett
+Maintainer: Dustin Howett,zqbb
 Author: Dustin Howett
 Architecture: iphoneos-arm64
-Name: PreferenceLoader - rootless (top)
+Name: PreferenceLoader (top)
 Conflicts: preferenceloader, preferenceloader.rootless
 Replaces: preferenceloader
 Provides: preferenceloader (= 2.2.6)
 Section: System
-Installed-Size: 336
