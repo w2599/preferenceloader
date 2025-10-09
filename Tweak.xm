@@ -1,7 +1,7 @@
 #import <Preferences/Preferences.h>
 #import <substrate.h>
 #import <dlfcn.h>
-
+#import <rootless.h>
 #import "prefs.h"
 
 #define DEBUG_TAG "PreferenceLoader"
@@ -22,12 +22,13 @@ static NSString **pPSTableCellUseEtchedAppearanceKey = NULL;
 static BOOL _Firmware_lt_60 = NO;
 /* }}} */
 
-%hook PrefsListController
+
 static NSMutableArray *_loadedSpecifiers = nil;
 static NSInteger _extraPrefsGroupSectionID = 0;
 
 /* {{{ iPad Hooks */
 %group iPad
+%hook PrefsListController
 - (NSString *)tableView:(UITableView *)view titleForHeaderInSection:(NSInteger)section {
 	if([_loadedSpecifiers count] == 0) return %orig;
 	if(section == _extraPrefsGroupSectionID) return _Firmware_lt_60 ? @"Extensions" : NULL;
@@ -40,6 +41,7 @@ static NSInteger _extraPrefsGroupSectionID = 0;
 	return %orig;
 }
 %end
+%end
 /* }}} */
 
 static NSInteger PSSpecifierSort(PSSpecifier *a1, PSSpecifier *a2, void *context) {
@@ -47,7 +49,7 @@ static NSInteger PSSpecifierSort(PSSpecifier *a1, PSSpecifier *a2, void *context
 	NSString *string2 = [a2 name];
 	return [string1 localizedCaseInsensitiveCompare:string2];
 }
-
+%hook PrefsListController
 - (id)specifiers {
 	bool first = (MSHookIvar<id>(self, "_specifiers") == nil);
 	if(first) {
@@ -58,7 +60,7 @@ static NSInteger PSSpecifierSort(PSSpecifier *a1, PSSpecifier *a2, void *context
 		#if SIMULATOR
 		NSArray *subpaths = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:@"/opt/simject/PreferenceLoader/Preferences" error:NULL];
 		#else
-		NSArray *subpaths = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:@"/var/jb/Library/PreferenceLoader/Preferences" error:NULL];
+		NSArray *subpaths = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:ROOT_PATH_NS(@"/Library/PreferenceLoader/Preferences") error:NULL];
 		#endif
 		for(NSString *item in subpaths) {
 			if(![[item pathExtension] isEqualToString:@"plist"]) continue;
@@ -66,7 +68,7 @@ static NSInteger PSSpecifierSort(PSSpecifier *a1, PSSpecifier *a2, void *context
 			#if SIMULATOR
 			NSString *fullPath = [NSString stringWithFormat:@"/opt/simject/PreferenceLoader/Preferences/%@", item];
 			#else
-			NSString *fullPath = [NSString stringWithFormat:@"/var/jb/Library/PreferenceLoader/Preferences/%@", item];
+			NSString *fullPath = [NSString stringWithFormat:ROOT_PATH_NS(@"/Library/PreferenceLoader/Preferences/%@"), item];
 			#endif
 			NSDictionary *plPlist = [NSDictionary dictionaryWithContentsOfFile:fullPath];
 			if(![PSSpecifier environmentPassesPreferenceLoaderFilter:[plPlist objectForKey:@"filter"] ?: [plPlist objectForKey:PLFilterKey]]) continue;

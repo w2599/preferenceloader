@@ -1,17 +1,21 @@
 # DON'T USE THIS MAKEFILE! IT IS NOT INTENDED FOR UPSTREAM THEOS
 
-TARGET := iphone:clang:14.5:14.0
+TARGET := iphone:clang:16.5:15.0
 ARCHS = arm64e
 
 export THEOS_USE_NEW_ABI=1
 
-include $(THEOS)/makefiles/common.mk
-
 ifeq ($(ROOTLESS),1)
+THEOS_PACKAGE_SCHEME = rootless
 export INSTALL_PREFIX = /var/jb
-else
+else ifeq ($(ROOTHIDE),1)
+THEOS_PACKAGE_SCHEME = roothide
+export INSTALL_PREFIX = 
+else 
 export INSTALL_PREFIX = 
 endif
+
+include $(THEOS)/makefiles/common.mk
 
 LIBRARY_NAME = libprefs
 libprefs_FILES = prefs.xm
@@ -23,7 +27,11 @@ libprefs_COMPATIBILITY_VERSION = 2.2.0
 libprefs_LIBRARY_VERSION = $(shell echo "$(THEOS_PACKAGE_BASE_VERSION)" | cut -d'~' -f1)
 libprefs_LDFLAGS  = -compatibility_version $($(THEOS_CURRENT_INSTANCE)_COMPATIBILITY_VERSION)
 libprefs_LDFLAGS += -current_version $($(THEOS_CURRENT_INSTANCE)_LIBRARY_VERSION)
+ifeq ($(ROOTLESS),1)
 libprefs_LDFLAGS += -rpath /var/jb/usr/lib -rpath /usr/lib
+else ifeq ($(ROOTHIDE),1)
+libprefs_LDFLAGS += -lroothide
+endif
 libprefs_INSTALL_PATH = $(INSTALL_PREFIX)/usr/lib
 
 TWEAK_NAME = PreferenceLoader
@@ -32,7 +40,11 @@ PreferenceLoader_FRAMEWORKS = UIKit
 PreferenceLoader_PRIVATE_FRAMEWORKS = Preferences
 PreferenceLoader_LIBRARIES = prefs
 PreferenceLoader_CFLAGS = -I.
+ifeq ($(ROOTLESS),1)
 PreferenceLoader_LDFLAGS = -L$(THEOS_OBJ_DIR) -rpath /var/jb/usr/lib -rpath /usr/lib
+else ifeq ($(ROOTHIDE),1)
+PreferenceLoader_LDFLAGS = -L$(THEOS_OBJ_DIR) -lroothide
+endif
 ifeq ($(ROOTLESS),1)
 PreferenceLoader_INSTALL_PATH = $(INSTALL_PREFIX)/usr/lib/TweakInject
 else
