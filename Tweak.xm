@@ -1,7 +1,7 @@
 #import <Preferences/Preferences.h>
 #import <substrate.h>
 #import <dlfcn.h>
-#import <rootless.h>
+#include <roothide.h>
 #import "prefs.h"
 
 #define DEBUG_TAG "PreferenceLoader"
@@ -60,7 +60,7 @@ static NSInteger PSSpecifierSort(PSSpecifier *a1, PSSpecifier *a2, void *context
 		#if SIMULATOR
 		NSArray *subpaths = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:@"/opt/simject/PreferenceLoader/Preferences" error:NULL];
 		#else
-		NSArray *subpaths = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:ROOT_PATH_NS(@"/Library/PreferenceLoader/Preferences") error:NULL];
+		NSArray *subpaths = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:jbroot(@"/Library/PreferenceLoader/Preferences") error:NULL];
 		#endif
 		for(NSString *item in subpaths) {
 			if(![[item pathExtension] isEqualToString:@"plist"]) continue;
@@ -68,7 +68,7 @@ static NSInteger PSSpecifierSort(PSSpecifier *a1, PSSpecifier *a2, void *context
 			#if SIMULATOR
 			NSString *fullPath = [NSString stringWithFormat:@"/opt/simject/PreferenceLoader/Preferences/%@", item];
 			#else
-			NSString *fullPath = [NSString stringWithFormat:ROOT_PATH_NS(@"/Library/PreferenceLoader/Preferences/%@"), item];
+			NSString *fullPath = [NSString stringWithFormat:jbroot(@"/Library/PreferenceLoader/Preferences/%@"), item];
 			#endif
 			NSDictionary *plPlist = [NSDictionary dictionaryWithContentsOfFile:fullPath];
 			if(![PSSpecifier environmentPassesPreferenceLoaderFilter:[plPlist objectForKey:@"filter"] ?: [plPlist objectForKey:PLFilterKey]]) continue;

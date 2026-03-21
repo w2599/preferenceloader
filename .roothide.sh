@@ -1,8 +1,6 @@
 #!/bin/bash
 export LC_ALL=C
 export THEOS=/Users/zqbb/theos_roothide
-export THEOS_DEVICE_IP=192.168.31.158
-export THEOS_DEVICE_PORT=2222
 export ARCHS=arm64e
 
 #取绝对路径
@@ -55,12 +53,22 @@ echo "替换完成"
 sed -i '' "s/^\(Version:\s*\).*/\1 ${versionSee}/" control
 echo "编译版本号为${versionSee}"
 
-find . -type f -exec sed -i '' -e 's/#import "rootless.h"/#include <roothide.h>/g; s/#import <rootless.h>/#include <roothide.h>/g; s/ROOT_PATH_NS/jbroot/g; s/ROOT_PATH/jbroot/g' {} +
 
 if [ $1 -eq "0" ]
 then
+    export THEOS_DEVICE_IP=192.168.31.158
+    export THEOS_DEVICE_PORT=54322
     export package FINALPACKAGE=1
-	export ROOTHIDE=1
+	export THEOS_PACKAGE_SCHEME=rootless
+
+	make do -j$(sysctl -n hw.physicalcpu)
+	exit
+fi
+
+if [ $1 -eq "10" ]
+then
+    export package FINALPACKAGE=1
+	export THEOS_PACKAGE_SCHEME=roothide
 
 	make do -j$(sysctl -n hw.physicalcpu)
 	cp -f ./packages/*.deb /Users/zqbb/Documents/GitHub/roothide/
@@ -71,7 +79,7 @@ fi
 if [ $1 -eq "1" ]
 then
     export package FINALPACKAGE=1
-	export ROOTHIDE=1
+	export THEOS_PACKAGE_SCHEME=roothide
 	make do 
 	exit
 fi
@@ -81,14 +89,15 @@ then
 	export package FINALPACKAGE=1
     # export DEVELOPER_DIR="/Applications/Xcode-14.3.0.app/Contents/Developer"
 
-	export ROOTHIDE=1
+	export THEOS_PACKAGE_SCHEME=roothide
     make package -j$(sysctl -n hw.physicalcpu)
 
-    unset ROOTHIDE
-    export ROOTLESS=1
+    unset THEOS_PACKAGE_SCHEME
+    make clean
+    export THEOS_PACKAGE_SCHEME=rootless
     make package -j$(sysctl -n hw.physicalcpu)
 
 	# cp -f ./packages/*.deb $tweakPath
-	mv ./packages/*.deb ~/Documents/GitHub/rootless/
+	mv ./packages/*.deb ~/Documents/GitHub/myTweaks/rootless/
     exit
 fi
